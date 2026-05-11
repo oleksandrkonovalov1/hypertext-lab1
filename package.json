@@ -1,0 +1,9 @@
+{
+  "name": "hypertext-lab1",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "serve": "npx serve src",
+    "report": "node reports/lr1/generate-report.mjs"
+  }
+}

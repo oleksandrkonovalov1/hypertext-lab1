@@ -6,6 +6,10 @@ import {
   LevelFormat, BorderStyle,
 } from "docx";
 import { writeFileSync, readFileSync } from "fs";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const MM_TO_DXA = 56.693;
 const PT_TO_HALF_PT = 2;
@@ -135,8 +139,8 @@ function pageBreak() {
 }
 
 // --- Read source files ---
-const BASE = "/Users/oleksandrkonovalov/Projects/nure/courses/hypertext-and-hypermedia/labs/lab_01";
-const SRC = `${BASE}/src`;
+const REPORT_DIR = __dirname;
+const SRC = resolve(REPORT_DIR, "../../src");
 const indexHtml = readFileSync(`${SRC}/index.html`, "utf-8");
 const plantsHtml = readFileSync(`${SRC}/plants.html`, "utf-8");
 const contactHtml = readFileSync(`${SRC}/contact.html`, "utf-8");
@@ -262,19 +266,19 @@ const section4 = [
   body("Результати виконання лабораторної роботи представлені у вигляді скріншотів вебсайту «Ботанічний довідник» у браузері Google Chrome."),
   empty(),
 
-  imageFromFile(`${BASE}/screenshots/index-full.png`, 450, 850),
+  imageFromFile(`${REPORT_DIR}/screenshots/index-full.png`, 450, 850),
   figureCaption("4.1", "Головна сторінка (index.html)"),
 
   pageBreak(),
-  imageFromFile(`${BASE}/screenshots/plants-full.png`, 450, 850),
+  imageFromFile(`${REPORT_DIR}/screenshots/plants-full.png`, 450, 850),
   figureCaption("4.2", "Сторінка каталогу рослин (plants.html)"),
 
   pageBreak(),
-  imageFromFile(`${BASE}/screenshots/contact-full.png`, 450, 850),
+  imageFromFile(`${REPORT_DIR}/screenshots/contact-full.png`, 450, 850),
   figureCaption("4.3", "Сторінка контактів та медіа (contact.html)"),
 
   pageBreak(),
-  imageFromFile(`${BASE}/screenshots/nav-dropdown.png`, 550, 300),
+  imageFromFile(`${REPORT_DIR}/screenshots/nav-dropdown.png`, 550, 300),
   figureCaption("4.4", "Горизонтальне випадаюче меню навігації"),
 ];
 
@@ -433,6 +437,6 @@ const doc = new Document({
 });
 
 const buffer = await Packer.toBuffer(doc);
-const outPath = `${BASE}/Звіт_ЛР1_Коновалов_ПЗПІ-25-6.docx`;
+const outPath = `${REPORT_DIR}/Звіт_ЛР1_Коновалов_ПЗПІ-25-6.docx`;
 writeFileSync(outPath, buffer);
 console.log(`Created: ${outPath} (${(buffer.length / 1024).toFixed(0)} KB)`);

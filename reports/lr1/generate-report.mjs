@@ -16,7 +16,10 @@ const PT_TO_HALF_PT = 2;
 const FONT = "Times New Roman";
 const FONT_CODE = "Courier New";
 const BODY_SIZE = 14 * PT_TO_HALF_PT;
-const CODE_SIZE = 10 * PT_TO_HALF_PT;
+const CODE_SIZE = 9 * PT_TO_HALF_PT;
+const CODE_LEFT_INDENT = 283;
+const CODE_BORDER_COLOR = "4472C4";
+const CODE_BG_COLOR = "F2F2F2";
 const LINE_SPACING_15 = 360;
 const INDENT = Math.round(12.5 * MM_TO_DXA);
 
@@ -75,11 +78,12 @@ function bodyNoIndent(text) {
   });
 }
 
-function heading1(number, title) {
+function heading1(number, title, { pageBreakBefore: pbBefore = false } = {}) {
   return new Paragraph({
     heading: HeadingLevel.HEADING_1,
     spacing: { before: 240, after: 120, line: LINE_SPACING_15, lineRule: "auto" },
-    alignment: AlignmentType.CENTER,
+    keepNext: true,
+    pageBreakBefore: pbBefore,
     children: [new TextRun({ text: `${number} ${title}`.toUpperCase(), font: FONT, size: BODY_SIZE, bold: true })],
   });
 }
@@ -89,19 +93,30 @@ function heading2(number, title) {
     heading: HeadingLevel.HEADING_2,
     spacing: { before: 120, after: 60, line: LINE_SPACING_15, lineRule: "auto" },
     indent: { firstLine: INDENT },
+    keepNext: true,
     children: [new TextRun({ text: `${number} ${title}`, font: FONT, size: BODY_SIZE, bold: true })],
   });
 }
 
-function codeLine(text) {
+function codeLine(text, { keepLines = false, keepNext = false } = {}) {
   return new Paragraph({
     spacing: { after: 0, line: 240, lineRule: "auto" },
-    children: [new TextRun({ text, font: FONT_CODE, size: CODE_SIZE })],
+    indent: { left: CODE_LEFT_INDENT },
+    shading: { fill: CODE_BG_COLOR, color: "auto", type: "clear" },
+    border: { left: { style: BorderStyle.SINGLE, size: 12, color: CODE_BORDER_COLOR, space: 4 } },
+    keepLines,
+    keepNext,
+    children: [new TextRun({ text: text || " ", font: FONT_CODE, size: CODE_SIZE, shading: { fill: CODE_BG_COLOR, color: "auto", type: "clear" } })],
   });
 }
 
 function codeBlock(code) {
-  return code.split("\n").map(line => codeLine(line));
+  const lines = code.split("\n");
+  const keepTogether = lines.length <= 25;
+  return lines.map((line, i) => codeLine(line, {
+    keepLines: keepTogether,
+    keepNext: keepTogether && i < lines.length - 1,
+  }));
 }
 
 function listingCaption(number, title) {
@@ -262,7 +277,7 @@ const section3 = [
 // --- SECTION 4: РЕЗУЛЬТАТИ ---
 
 const section4 = [
-  heading1("4", "Результати"),
+  heading1("4", "Результати", { pageBreakBefore: true }),
   body("Результати виконання лабораторної роботи представлені у вигляді скріншотів вебсайту «Ботанічний довідник» у браузері Google Chrome."),
   empty(),
 
@@ -285,7 +300,7 @@ const section4 = [
 // --- SECTION 5: ВИСНОВКИ ---
 
 const section5 = [
-  heading1("5", "Висновки"),
+  heading1("5", "Висновки", { pageBreakBefore: true }),
   body("У ході виконання лабораторної роботи було вивчено стандарт HTML5 та каскадні таблиці стилів CSS. Розроблено вебсайт «Ботанічний довідник», що складається з трьох взаємопов’язаних сторінок з використанням семантичної розмітки, мета-тегів, таблиць, списків, форм з валідацією, медіаелементів та інтерактивної карти."),
   body("Опановано різні типи CSS-селекторів (тегів, класів, ідентифікаторів, дочірні, псевдокласи), а також CSS-ефекти: градієнти, тіні та прозорість. Сайт відповідає вимогам усіх трьох блоків завдань."),
 ];
@@ -293,7 +308,7 @@ const section5 = [
 // --- SECTION 6: КОНТРОЛЬНІ ПИТАННЯ ---
 
 const section6 = [
-  heading1("6", "Відповіді на контрольні питання"),
+  heading1("6", "Відповіді на контрольні питання", { pageBreakBefore: true }),
 
   bodyRuns([trBold("1. Що таке браузер?")]),
   body("Браузер — програмний застосунок, призначений для доступу до інформації в Інтернеті. Він інтерпретує HTML-код сторінки, знаходить теги розмітки та відображає їх у вигляді стильового оформлення змісту."),
@@ -345,8 +360,12 @@ function appendixSubtitle(title) {
 }
 
 const appendixA = [
-  pageBreak(),
-  appendixHeading("А"),
+  new Paragraph({
+    pageBreakBefore: true,
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 240, after: 120, line: LINE_SPACING_15, lineRule: "auto" },
+    children: [new TextRun({ text: "ДОДАТОК А", font: FONT, size: BODY_SIZE, bold: true })],
+  }),
   appendixSubtitle("Вихідний код"),
   empty(),
 
@@ -392,48 +411,34 @@ const doc = new Document({
       },
     ],
   },
-  sections: [
-    {
-      properties: {
-        page: {
-          size: { width: 11906, height: 16838 },
-          margin: {
-            top: Math.round(20 * MM_TO_DXA),
-            bottom: Math.round(20 * MM_TO_DXA),
-            left: Math.round(20 * MM_TO_DXA),
-            right: Math.round(20 * MM_TO_DXA),
-            header: 708, footer: 708,
-          },
-        },
+  sections: [{
+    properties: {
+      page: {
+        size: { width: 11906, height: 16838 },
+        margin: { ...margins, header: 708, footer: 708 },
       },
-      children: [...titlePage],
+      titlePage: true,
     },
-    {
-      properties: {
-        page: {
-          size: { width: 11906, height: 16838 },
-          margin: { ...margins, header: 708, footer: 708 },
-        },
-      },
-      headers: {
-        default: new Header({
-          children: [new Paragraph({
-            alignment: AlignmentType.RIGHT,
-            children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: BODY_SIZE })],
-          })],
-        }),
-      },
-      children: [
-        ...section1,
-        ...section2,
-        ...section3,
-        ...section4,
-        ...section5,
-        ...section6,
-        ...appendixA,
-      ],
+    headers: {
+      default: new Header({
+        children: [new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: BODY_SIZE })],
+        })],
+      }),
     },
-  ],
+    children: [
+      ...titlePage,
+      new Paragraph({ children: [new PageBreak()] }),
+      ...section1,
+      ...section2,
+      ...section3,
+      ...section4,
+      ...section5,
+      ...section6,
+      ...appendixA,
+    ],
+  }],
 });
 
 const buffer = await Packer.toBuffer(doc);
